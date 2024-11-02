@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 enum NetworkError: Error {
     case BadURL
@@ -33,6 +34,18 @@ class PhotoService {
         } catch {
             print("error decoding" + error.localizedDescription)
             return .failure(.NoData)
+        }
+    }
+    
+    func fetchImage(from url: String) async -> UIImage? {
+        guard let url = URL(string: url) else { return nil }
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            return UIImage(data: data)
+        } catch {
+            print("Failed to fetch image: \(error)")
+            return nil
         }
     }
 }
