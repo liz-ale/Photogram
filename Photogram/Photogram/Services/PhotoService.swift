@@ -14,13 +14,25 @@ enum NetworkError: Error {
 }
 
 class PhotoService {
-    func fetchPhotos(completion: @escaping (Result<[Photo], NetworkError>) -> Void) async {
+    func fetchPhotos() async -> Result<[Photo], NetworkError> {
         let url = URL(string: "https://jsonplaceholder.typicode.com/photos")!
-        URLSession.shared.dataTask(with: url) { data, _, error in
-            guard let data else {
-                completion(.failure(.NoData))
-                return
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            print(String(decoding: data, as: Unicode.UTF8.self))
+            
+            guard (response as! HTTPURLResponse).statusCode == 200 else {
+                return .failure(.BadURL)
+                
             }
+            
+            let photos = try JSONDecoder().decode([Photo].self, from: data)
+            return .success(photos)
+            
+        } catch {
+            print("error decoding" + error.localizedDescription)
+            return .failure(.NoData)
         }
     }
 }
